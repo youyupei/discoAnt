@@ -8,7 +8,7 @@ Discoant is a pipeline for the identification of known and novel isoforms from t
 - [Dependencies](#dependencies)
 - [General Usage](#General-Usage)
 - [Output](#Output)
-- [Visualization](#Visualization)
+- [Visualisation](#Visualisation)
 - [Troubleshooting](#Troubleshooting)
 
 ## Installation
