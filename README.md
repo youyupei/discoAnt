@@ -29,7 +29,7 @@ Test the installation:
 ```
 cd discoAnt
 conda activate discoAnt
-bash discoAnt_main sirv_test_data/sirv_params.txt
+./discoAnt_main sirv_test_data/sirv_params.ini
 ```
 This should produce a folder called 'SIRV5_test' which contains the expected output of the pipeline.
 
@@ -37,20 +37,20 @@ This should produce a folder called 'SIRV5_test' which contains the expected out
 Dependencies are automatically built in a conda environment when the setup script is executed.
 
 Required:
-  - Python >= 3.7.6
+  - python >= 3.7.6
   - BBMap
-  - Bedtools
-  - Samtools
-  - Salmon = 0.14.2 #required version
-  - Gffread
-  - Gffcompare
+  - bedtools
+  - samtools
+  - salmon == 0.14
+  - gffread
+  - gffcompare
   - minimap2
 
   R and R libraries:
   - R >= 4.3
   - Bioconductor
-  - Optparse
-  - Bambu >= 3.2.4
+  - optparse
+  - bambu >= 3.2.4
 
 ## General Usage
 Run discoAnt with the following command after editing the parameters file:
@@ -109,7 +109,7 @@ reverse_primers="path/to/reverse.bed" # default is NULL
 max_intron_length=400 # default is 400
 ##
 ```
-Minimal parameters file:
+Basic parameters file:
 ```
 OUTPUT_NAME=CLCN3
 ENSG_ID=ENSG00000109572
