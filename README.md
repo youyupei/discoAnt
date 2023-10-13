@@ -5,9 +5,9 @@ Discoant is a pipeline for the identification of known and novel isoforms from t
 ## Contents
 
 - [Installation](#installation)
+- [General Usage](#General-Usage)
 - [Output](#Output)
 - [Visualization](#Visualization)
-- [General Usage](#General-Usage)
 
 ## Installation
 
@@ -42,47 +42,67 @@ Run discoAnt with the following command after editing the parameters file:
 Parameters file with comments on usage:
 ```
 ## Experiment Info ##
+# a folder will be created with OUTPUT_NAME and this is used as a prefix for files
 OUTPUT_NAME=CLCN3
+# the ENSEMBL ID is used to filter reference files to increase speed
 ENSG_ID=ENSG00000109572
-# chr is used to filter reference files to increase speed
+# chromosome is used to filter genome reference file to increase speed
 chr=chr4
 ##
 
 ## Paths to data ##
-FASTA="path/to/sample/fasta_folders"
+# standard output for barcoded amplicon sequencing is multiple barcode/sample folers containing fastq or fasta files
+# supports .fasta or .fastq
+FASTA="path/to/sample/fa_folders"
+# path to reference genome 
 REF_GENOME_FN="path/to/hg38.fa"
+# path to reference annotation
 ANNA_GTF="path/to/gencode.v44.annotation.gtf"
 ##
 
 ## Minimum read count per isoform threshold ##
-# leave blank/delete for default value
-read_count_minimum=5
-samples_minimum=3
+# these values can be left blank to use default values
+read_count_minimum=5 # default is 5
+samples_minimum=3 # default is half the total number of samples (rounded to integer)
 ##
 
 ## Downsampling to be set to TRUE or FALSE ##
-downsampling=TRUE
+# Downsampling results in the same number of reads for every sample, reducing inter-sample bias
+downsampling=TRUE # default is TRUE
 # below is checked only if downsampling is TRUE
 # leave blank/delete for default value
-number_reads_downsample=8000
+number_reads_downsample=8000 # default is 8000
 ##
 
 ## Primer site filter to be set to TRUE or FALSE ##
-primer_site_based_filter=TRUE
+# Recommended to increase accuracy and reduce isoforms to only those amplified with primers
+# leave blank/delete for default values
+primer_site_based_filter=TRUE # default is FALSE
 # Primer coordinates for forward and reverse, as bed files
 # Only checked if primer filtering is TRUE
-forward_primers="path/to/forward.bed"
-reverse_primers="path/to/reverse.bed"
+forward_primers="path/to/forward.bed" # default is NULL
+reverse_primers="path/to/reverse.bed" # default is NULL
 ##
 
 ## Optional arguments ##
+# minimap2 typically only checks a distance of 200k, genes with long introns cause errors
 # leave blank/delete lines for default value
-max_intron_length=400
+max_intron_length=400 # default is 400
 ##
 ```
+Minimal parameters file:
+```
+OUTPUT_NAME=CLCN3
+ENSG_ID=ENSG00000109572
+chr=chr4
+FASTA="path/to/sample/fa_folders"
+REF_GENOME_FN="path/to/hg38.fa"
+ANNA_GTF="path/to/gencode.v44.annotation.gtf"
+```
+
 ## Output
 The main output of discoAnt includes three files:
-  - a report
+  - a basic text report
   - annotations of known and novel isoforms as a GTF
   - quantifications of known and novel isoforms as a CSV
 
