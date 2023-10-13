@@ -5,9 +5,11 @@ Discoant is a pipeline for the identification of known and novel isoforms from t
 ## Contents
 
 - [Installation](#installation)
+- [Dependencies](#dependencies)
 - [General Usage](#General-Usage)
 - [Output](#Output)
 - [Visualization](#Visualization)
+- [Troubleshooting](#Troubleshooting)
 
 ## Installation
 
@@ -32,6 +34,23 @@ bash discoAnt_main sirv_test_data/sirv_params.txt
 This should produce a folder called 'SIRV5_test' which contains the expected output of the pipeline.
 
 ## Dependencies
+Dependencies are automatically built in a conda environment when the setup script is executed.
+
+Required:
+  - Python >= 3.7.6
+  - BBMap
+  - Bedtools
+  - Samtools
+  - Salmon = 0.14.2 #required version
+  - Gffread
+  - Gffcompare
+  - minimap2
+
+  R and R libraries:
+  - R >= 4.3
+  - Bioconductor
+  - Optparse
+  - Bambu >= 3.2.4
 
 ## General Usage
 Run discoAnt with the following command after editing the parameters file:
@@ -105,6 +124,8 @@ The main output of discoAnt includes three files:
   - a basic text report
   - annotations of known and novel isoforms as a GTF
   - quantifications of known and novel isoforms as a CSV
+
+## Visualisation
 
 ## Troubleshooting
 
