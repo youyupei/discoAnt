@@ -29,11 +29,15 @@ cd discoAnt
 conda activate discoAnt
 bash discoAnt_main sirv_test_data/sirv_params.txt
 ```
-This should produce a folder called 'SIRV5_test' which contains the output of the pipeline.
+This should produce a folder called 'SIRV5_test' which contains the expected output of the pipeline.
 
 ## Dependencies
 
 ## General Usage
+Run discoAnt with the following command after editing the parameters file:
+```
+./discoAnt_main parameters.ini
+```
 
 Parameters file with comments on usage:
 ```
@@ -77,6 +81,10 @@ max_intron_length=400
 ##
 ```
 ## Output
+The main output of discoAnt includes three files:
+  - a report
+  - annotations of known and novel isoforms as a GTF
+  - quantifications of known and novel isoforms as a CSV
 
 ## Troubleshooting
 
