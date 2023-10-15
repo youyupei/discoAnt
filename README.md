@@ -65,8 +65,6 @@ Parameters file with comments on usage:
 OUTPUT_NAME=CLCN3
 # the ENSEMBL ID is used to filter reference files to increase speed
 ENSG_ID=ENSG00000109572
-# chromosome is used to filter genome reference file to increase speed
-chr=chr4
 ##
 
 ## Paths to data ##
@@ -113,7 +111,6 @@ Basic parameters file:
 ```
 OUTPUT_NAME=CLCN3
 ENSG_ID=ENSG00000109572
-chr=chr4
 FASTA="path/to/sample/fa_folders"
 REF_GENOME_FN="path/to/hg38.fa"
 ANNA_GTF="path/to/gencode.v44.annotation.gtf"
