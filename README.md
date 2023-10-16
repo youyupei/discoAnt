@@ -1,13 +1,19 @@
 # IsoLamp: isoform identification and quantification from long-read amplicon sequencing data
 
-IsoLamp is a bash pipeline for the identification of known and novel isoforms from targeted amplicon long-read sequencing data generated with Oxford Nanopore Technologies. 
+LOGO
+
+[![Install](https://img.shields.io/badge/Install-Github-brightgreen)](#installation)
+[![Generic badge](https://img.shields.io/badge/Language-Bash-<COLOR>.svg)](https://shields.io/)
+[![DOI](https://zenodo.org/badge/142873004.svg)](https://zenodo.org/badge/latestdoi/142873004)
+
+**IsoLamp is a bash pipeline for the identification of known and novel isoforms from targeted amplicon long-read sequencing data generated with Oxford Nanopore Technologies.**
 
 <img src="https://github.com/youyupei/discoAnt/assets/30969357/aa0684e7-4878-4440-a41a-2e2b121fe0c4" width="440" height="600">
 
 ## Contents
 
 - [Installation](#installation)
-- [Usage](#usage)
+- [General Command Line Usage](#general-command-line-usage)
 - [SIRV Test Dataset](#SIRV-test-dataset)
 - [Dependencies](#dependencies)
 - [Input Data](#input-data)
@@ -30,7 +36,7 @@ bash scripts/IsoLamp_setup
 ```
 **Note:** depending on your operating system you may need to edit the setup script to either 'conda activate' or 'source activate'.
 
-## Usage
+## General Command Line Usage
 
 We suggest adding IsoLamp to your PATH so it can be run from any directory:
 ```
@@ -150,8 +156,7 @@ The main output of IsoLamp includes three files:
   - a basic text report
   - annotations of known and novel isoforms as a GTF
   - quantifications of known and novel isoforms as a CSV
-
-## Visualisation
+  - a PCA plot of samples/barcodes
 
 ## Troubleshooting
 
