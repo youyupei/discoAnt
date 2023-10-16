@@ -1,12 +1,15 @@
-# discoAnt: isoform identification and quantification from long-read amplicon sequencing
+# IsoLamp: isoform identification and quantification from long-read amplicon sequencing data
 
-Discoant is a pipeline for the identification of known and novel isoforms from targeted amplicon sequencing data generated with Oxford Nanopore Technologies long-read sequencing. 
+IsoLamp is a bash pipeline for the identification of known and novel isoforms from targeted amplicon long-read sequencing data generated with Oxford Nanopore Technologies. 
 
 ## Contents
 
 - [Installation](#installation)
+- [Usage](#usage)
+- [SIRV Test Dataset](#SIRV-test-dataset)
 - [Dependencies](#dependencies)
-- [General Usage](#General-Usage)
+- [Input Data](#input-data)
+- [Parameters](#parameters)
 - [Output](#Output)
 - [Visualisation](#Visualisation)
 - [Troubleshooting](#Troubleshooting)
@@ -20,16 +23,35 @@ git clone https://github.com/youyupei/discoAnt.git
 
 Run the setup script:
 ```
-cd discoAnt
-bash scripts/discoAnt_setup
+cd IsoLamp
+bash scripts/IsoLamp_setup
 ```
-*Note*: depending on your operating system you may need to edit the setup script to either 'conda activate' or 'source activate'.
+**Note:** depending on your operating system you may need to edit the setup script to either 'conda activate' or 'source activate'.
 
-Test the installation:
+## Usage
+
+We suggest adding IsoLamp to your PATH so it can be run from any directory:
 ```
-cd discoAnt
-conda activate discoAnt
-./discoAnt_main sirv_test_data/sirv_params.ini
+echo 'export PATH=~/path/to/IsoLamp:$PATH' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+Run IsoLamp (after editing the parameters file):
+```
+conda activate IsoLamp
+
+IsoLamp parameters.ini 
+
+# alternatively, if not in PATH:
+./IsoLamp parameters.ini # if running from same directory
+~/path/to/IsoLamp/IsoLamp parameters.ini # provide full path when running from other directories
+```
+
+## SIRV test dataset
+Test the installation on the provided SIRV data:
+```
+conda activate IsoLamp
+IsoLamp sirv_test_data/sirv_params.ini
 ```
 This should produce a folder called 'SIRV5_test' which contains the expected output of the pipeline.
 
@@ -52,12 +74,14 @@ Required:
   - optparse
   - bambu >= 3.2.4
 
-## General Usage
-Run discoAnt with the following command after editing the parameters file:
-```
-./discoAnt_main parameters.ini
-```
+## Input data
+The pipeline is designed to run on barcoded data produced by Oxford Nanopore Technologies. This is typically a directory containing subdirectories titled 'barcode01', 'barcode02' etc. Each barcode directory contains either single or multiple FASTA or FASTQ files of reads.
 
+Please see the sirv_test_data/test_fasta directory for an example of the structure required. If you don't have barcoded data, please create a subdirectory with your single sample name and place all read FASTA or FASTQ files inside this directory (nanopore_data/sample_name/all_reads.fastq).
+
+**Note:** the 'barcode' name is arbitrary, your subdirectories can be renamed to sample names or any identifiers.
+
+## Parameters
 Parameters file with comments on usage:
 ```
 ## Experiment Info ##
@@ -105,6 +129,9 @@ reverse_primers="path/to/reverse.bed" # default is NULL
 # minimap2 typically only checks a distance of 200k, genes with long introns cause errors
 # leave blank/delete lines for default value
 max_intron_length=400 # default is 400
+# bambu parameters, leave blank for defaults
+bambu_ndr=1
+bambu_min_gene_fraction=0.005
 ##
 ```
 Basic parameters file:
@@ -117,7 +144,7 @@ ANNA_GTF="path/to/gencode.v44.annotation.gtf"
 ```
 
 ## Output
-The main output of discoAnt includes three files:
+The main output of IsoLamp includes three files:
   - a basic text report
   - annotations of known and novel isoforms as a GTF
   - quantifications of known and novel isoforms as a CSV
