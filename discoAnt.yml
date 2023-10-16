@@ -18,6 +18,9 @@ dependencies:
   - r-biocmanager
   - r-optparse
   - bioconductor-bambu
+  - r-factominer
+  - r-factoextra
+  - r-ggrepel
 #  - numpy
 #  - openssl
 #  - pybedtools
@@ -25,7 +28,7 @@ dependencies:
 #  - scipy
 #  - cython
 #  - scikit-learn
-#  - r-ggplot2
+  - r-ggplot2
 #  - r-ggplotify
 #  - biopython
 #  - bx-python
