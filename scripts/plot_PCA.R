@@ -14,7 +14,9 @@ option_list = list(
     make_option(c("-i", "--input"), type="character", default=NULL,
             help="input count_data"),
     make_option(c("-o", "--output_prefix"), type="character", default=NULL,
-            help="output name")
+            help="output name"),
+    make_option(c("-g", "--grouping_variable"), type = "character", default = NULL,
+     help = "grouping table")
 )
 
   opt_parser = OptionParser(option_list=option_list)
@@ -22,13 +24,16 @@ option_list = list(
   
   count_data <- (opt$input)
   output_prefix <- (opt$output_prefix)
+  grouping_variable <- (opt$grouping_variable)
 
 
-plot_pca <- function(count_data, output_prefix) {
+plot_pca <- function(count_data, output_prefix, grouping_variable) {
   
   # Read in the counts table from a CSV file
   data <- read.csv(count_data, header = TRUE, row.names = 1)
-
+  # Read in the grouping variable
+  d.f <- read.csv(grouping_variable, header = TRUE)
+  
   #transpsoe the data
   data_transposed <- t(data)
 
@@ -37,12 +42,15 @@ plot_pca <- function(count_data, output_prefix) {
 
   # Create a data frame for PCA results
   pca_data <- as.data.frame(pca_result$ind$coord)
-
+ 
   # Rename columns for the PCA data frame (PC1, PC2, etc.)
   colnames(pca_data) <- c(paste0("PC", 1:ncol(pca_data)))
-
+  pca_data$Sample <- rownames(pca_data)
+  # merge data frames together 
+  merged_df <- merge(d.f, pca_data, by = "Sample", all = TRUE)
+ 
   # Create a PCA plot using ggplot2
-  pca_plot <- ggplot(pca_data, aes(x = PC1, y = PC2, label = rownames(pca_data))) +
+  pca_plot <- ggplot(merged_df, aes(x = PC1, y = PC2, color = Group, label = rownames(merged_df))) +
     geom_point(size = 3, alpha = 0.6) +  # Customize point size and color
     geom_text_repel(
       hjust = -0.2, vjust = -0.5, size = 4, color = "black",
@@ -66,4 +74,4 @@ plot_pca <- function(count_data, output_prefix) {
 
 }
 
-plot_pca(count_data, output_prefix)
+plot_pca(count_data, output_prefix, grouping_variable)
