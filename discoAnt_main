@@ -513,7 +513,14 @@ function sqanti_function() {
 #### plot PCA 
 
 function plot_PCA() {
-	redirect_output Rscript $SCRIPT_DIR/scripts/plot_PCA.R -i $OUTPUT_NAME/$OUTPUT_NAME"_counts.csv" -o "$OUTPUT_NAME/$OUTPUT_NAME"
+
+	if [ -z "$grouping_variable" ] 
+	then
+		grouping_variable=NULL # set to the default value if empty
+	fi
+
+	redirect_output Rscript $SCRIPT_DIR/scripts/plot_PCA.R -i $OUTPUT_NAME/$OUTPUT_NAME"_counts.csv" -o "$OUTPUT_NAME/$OUTPUT_NAME" -g $grouping_variable
+
 }
 
 

@@ -14,7 +14,9 @@ option_list = list(
     make_option(c("-i", "--input"), type="character", default=NULL,
             help="input count_data"),
     make_option(c("-o", "--output_prefix"), type="character", default=NULL,
-            help="output name")
+            help="output name"),
+    make_option(c("-g", "--grouping_variable"), type = "character", default = NULL,
+     help = "grouping table")
 )
 
   opt_parser = OptionParser(option_list=option_list)
@@ -22,27 +24,46 @@ option_list = list(
   
   count_data <- (opt$input)
   output_prefix <- (opt$output_prefix)
+  grouping_variable <- (opt$grouping_variable)
 
 
-plot_pca <- function(count_data, output_prefix) {
+  # Check if the grouping_variable option was provided and is not "NULL"
+  if (!is.null(opt$grouping_variable) && opt$grouping_variable != "NULL") {
+    grouping_variable <- opt$grouping_variable
+  } else {
+    grouping_variable <- NULL
+  }
+
+plot_pca <- function(count_data, output_prefix, grouping_variable) {
   
   # Read in the counts table from a CSV file
   data <- read.csv(count_data, header = TRUE, row.names = 1)
-
-  #transpsoe the data
+  
+  #transpose the data
   data_transposed <- t(data)
-
+  
   # Perform PCA on the transposed data
   pca_result <- PCA(data_transposed, graph = FALSE)
-
+  
   # Create a data frame for PCA results
   pca_data <- as.data.frame(pca_result$ind$coord)
-
+  
   # Rename columns for the PCA data frame (PC1, PC2, etc.)
   colnames(pca_data) <- c(paste0("PC", 1:ncol(pca_data)))
-
+  pca_data$Sample <- rownames(pca_data)
+  
+  if (is.null(grouping_variable)) {
+    # If grouping_variable is NULL, set the "Group" column to 1 for all samples
+    pca_data$Group <- "Group A"
+    merged_df <- pca_data
+  } else {
+    # Read in the grouping variable
+    d.f <- read.csv(grouping_variable, header = TRUE)
+    merged_df <- merge(d.f, pca_data, by = "Sample", all = TRUE)
+  }
+ 
   # Create a PCA plot using ggplot2
-  pca_plot <- ggplot(pca_data, aes(x = PC1, y = PC2, label = rownames(pca_data))) +
+  pca_plot <- ggplot(merged_df, aes(x = PC1, y = PC2, color = Group, label = merged_df$Sample)) +
     geom_point(size = 3, alpha = 0.6) +  # Customize point size and color
     geom_text_repel(
       hjust = -0.2, vjust = -0.5, size = 4, color = "black",
@@ -66,4 +87,4 @@ plot_pca <- function(count_data, output_prefix) {
 
 }
 
-plot_pca(count_data, output_prefix)
+plot_pca(count_data, output_prefix, grouping_variable)
