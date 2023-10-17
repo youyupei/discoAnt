@@ -1,4 +1,4 @@
-name: discoAnt
+name: IsoLamp
 channels:
   - conda-forge
   - bioconda

@@ -15,7 +15,7 @@ echo \
 ██ ███████  ██████  ███████ ██   ██ ██      ██ ██  
 "
 
-#echo "v1.0"
+echo "v1.0"
 
 # if the $OUTPUT_NAME directory already exists, exit
 if [ -d $OUTPUT_NAME ] 
@@ -29,7 +29,7 @@ mkdir $OUTPUT_NAME
 mkdir $OUTPUT_NAME/temp_files
 
 # make logs file
-log_file="$OUTPUT_NAME/discoAnt.logs"
+log_file="$OUTPUT_NAME/IsoLamp.logs"
 # function to redirect output to the log file
 function redirect_output() {
     # Redirect both stdout (1) and stderr (2) to the log file

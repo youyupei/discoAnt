@@ -1,12 +1,12 @@
 #!/bin/bash
 
-chmod +x discoAnt_main
+chmod u+x IsoLamp
 
-#conda env create -f discoAnt.yml 
-source env create -f discoAnt.yml
+#conda env create -f IsoLamp.yml 
+source env create -f IsoLamp.yml
 
-#conda activate discoAnt
-source activate discoAnt
+#conda activate IsoLamp
+source activate IsoLamp
 
 # install SQANTI
 cd scripts
