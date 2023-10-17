@@ -327,8 +327,8 @@ function primer_site_function() {
 		# used to be a 5bp window created around primers, do we need this..?
 		
 		# intersect forward and reverse primers with GTF
-		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf | awk '{ if ($3 == "exon") print }' | bedtools intersect -wa -u -a - -b $forward_primers | grep -o 'transcript_id "[^"]*' | cut -d' ' -f2 | sed 's/"//g' > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_forward_primer_exons.txt
-		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf | awk '{ if ($3 == "exon") print }' | bedtools intersect -wa -a - -b $reverse_primers | grep -o 'transcript_id "[^"]*' | cut -d' ' -f2 | sed 's/"//g' > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_reverse_primer_exons.txt
+		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf | awk '{ if ($3 == "exon") print }' | bedtools intersect -wa -u -F 0.8 -a - -b $forward_primers | grep -o 'transcript_id "[^"]*' | cut -d' ' -f2 | sed 's/"//g' > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_forward_primer_exons.txt
+		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf | awk '{ if ($3 == "exon") print }' | bedtools intersect -wa -u -F 0.8 -a - -b $reverse_primers | grep -o 'transcript_id "[^"]*' | cut -d' ' -f2 | sed 's/"//g' > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_reverse_primer_exons.txt
 		
 		# combine isoforms found in both forward and reverse primers
 		comm -12 <(sort $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_forward_primer_exons.txt) <(sort $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_reverse_primer_exons.txt) > $OUTPUT_NAME/temp_files/updated_transcriptome.txt
