@@ -4,7 +4,7 @@ LOGO.
 
 [![Install](https://img.shields.io/badge/Install-Github-brightgreen)](#installation)
 [![Generic badge](https://img.shields.io/badge/Language-Bash-<COLOR>.svg)](https://shields.io/)
-[![DOI](https://zenodo.org/badge/142873004.svg)](https://zenodo.org/badge/latestdoi/142873004)
+[![Generic badge](https://img.shields.io/badge/Publication-01.xx-<COLOR>.svg)](https://shields.io/)
 
 **IsoLamp is a bash pipeline for the identification of known and novel isoforms from targeted amplicon long-read sequencing data generated with Oxford Nanopore Technologies.**
 
@@ -19,7 +19,7 @@ PIPELINE.
 - [Input Data](#input-data)
 - [Parameters](#parameters)
 - [Output](#Output)
-- [Visualisation](#Visualisation)
+- [Visualisation with IsoVis](#Visualisation-with-IsoVis)
 - [Troubleshooting](#Troubleshooting)
 
 ## Installation
@@ -55,7 +55,7 @@ IsoLamp parameters.ini
 ~/path/to/IsoLamp/IsoLamp parameters.ini # provide full path when running from other directories
 ```
 
-## SIRV test dataset
+## SIRV Test Dataset
 Test the installation on the provided SIRV data:
 ```
 conda activate IsoLamp
@@ -64,28 +64,29 @@ IsoLamp sirv_test_data/sirv_params.ini
 This should produce a folder called 'SIRV5_test' which contains the expected output of the pipeline.
 
 ## Dependencies
-Dependencies are automatically built in a conda environment when the setup script is executed.
+All dependencies and R libraries are automatically built in a conda environment when the setup script is executed.
 
-Required:
-  - python >= 3.7.6
+  - python>=3.7.6
   - BBMap
   - bedtools
   - samtools
-  - salmon == 0.14
+  - salmon=0.14.2
   - gffread
   - gffcompare
   - minimap2
+  - R>=4.3
+  - Bioconductor (R package)
+  - optparse (R package)
+  - bambu>=3.2.4 (Bioconductor R package)
+  - factominer (R package)
+  - factoextra (R package)
+  - ggrepel (R package)
+  - ggplot2 (R package)
 
-  R and R libraries:
-  - R >= 4.3
-  - Bioconductor
-  - optparse
-  - bambu >= 3.2.4
-
-## Input data
+## Input Data
 The pipeline is designed to run on barcoded data produced by Oxford Nanopore Technologies, typically from amplicon sequencing of a gene of interest. This is typically a directory containing subdirectories titled 'barcode01', 'barcode02' etc. Each barcode directory contains either single or multiple FASTA or FASTQ files of reads. If you have multiple experiments amplifying different genes, run the pipeline once for each gene.
 
-Please see the sirv_test_data/test_fasta directory for an example of the structure required. If you don't have barcoded data, please create a subdirectory with your single sample name and place all read FASTA or FASTQ files inside this directory (nanopore_data/sample_name/all_reads.fastq).
+Please see the sirv_test_data/test_fasta directory for an example of the structure required. If you don't have barcoded data, please create a subdirectory with your single sample name and place all read FASTA or FASTQ files inside this directory (nanopore_data/barcode01/reads.fastq, nanopore_data/barcode02/reads.fastq, ...).
 
 **Note:** the 'barcode' name is arbitrary, your subdirectories can be renamed to sample names or any identifiers.
 
@@ -116,6 +117,9 @@ REF_GENOME_FN="path/to/hg38.fa"
 # path to reference annotation
 ANNA_GTF="path/to/gencode.v44.annotation.gtf"
 
+# path to a CSV of sample IDs and group IDs
+grouping_variable="path/to/group_ids.csv" # default is NULL, leave blank for default
+
 ## Minimum read count per isoform threshold ##
 read_count_minimum=5 # default is 5, leave blank for default
 samples_minimum=3 # default is half the total number of samples (rounded down to integer), leave blank for default
@@ -145,10 +149,11 @@ Detailed descriptions of parameters:
 |Parameter|Type|Default|Description| 
 |---|---|---|---|
 |OUTPUT_NAME|required|NA|A directory will be created with this name, we suggest using the gene name.|
-|ENSG_ID|optional|NULL|The ENSEMBL gene ID. This is used to filter the reference genome and annotation. An ENSEMBL ID is required for visualisation with IsoVis. If this is not available, use the gene name. This parameter greatly increases the pipeline's speed.| 
+|ENSG_ID|required|NA|The ENSEMBL gene ID. This is used to filter the reference genome and annotation. An ENSEMBL ID is also required for visualisation with IsoVis. If this ID not available, use the gene name as it appears in the GTF.| 
 |FASTA|required|NA|Path to the top level directory of sample/barcode directories.|
 |REF_GENOME_FN|required|NA|The reference genome.|
 |ANNA_GTF|required|NA|The reference annotation GTF.|
+|grouping_variable|optional|NULL|A CSV file of sample and group names used for plotting. See example of this in 'sirv_test_data/SIRV_grouping.csv'|
 |read_count_minimum|optional|5|Known and novel isoforms must meet this threshold in at least 'samples_minimum' number of samples.|
 |samples_minimum|optional|NA|Known and novel isoforms must meet the read count minimum in this many samples. Default value caclulated as number of samples/2 rounded down to nearest integer.|
 |downsampling|optional|TRUE|Whether each sample/barcode should be downsampled to a consistent number of reads.|
@@ -164,9 +169,20 @@ Detailed descriptions of parameters:
 ## Output
 The main output of IsoLamp includes three files:
   - a basic text report
-  - annotations of known and novel isoforms as a GTF
-  - quantifications of known and novel isoforms as a CSV
+  - annotation of known and novel isoforms as a GTF
+  - quantification of known and novel isoforms (counts and propoprtions) as CSVs
   - a PCA plot of samples/barcodes
 
+## Visualisation with IsoVis
+The results from the IsoLamp pipeline can be visualised using IsoVis: https://isomix.org/isovis.
+
+The isoform annotation GTF (and optionally isoform counts CSV) can be directly uploaded to IsoVIs.
+
+
 ## Troubleshooting
+
+
+
+
+
 
