@@ -27,7 +27,7 @@ suppressWarnings({
   read_count_min <- as.numeric(opt$read_min)
   samples_min <- as.numeric(opt$sample_min)
   outdir <- (opt$output_path)
-
+  
   # get sample ids from within directory
   sample_names <- c(list.files(paste0(outdir,"/updated_transcriptome/salmon_quants/")))
 
@@ -61,24 +61,40 @@ suppressWarnings({
   new_col_order <- c("TXNAME", paste0(colnames(combined_counts)))
   # convert row names to column called TXNAME
   combined_counts$TXNAME <- rownames(combined_counts)
+  # remove rownames
+  rownames(combined_counts) <- NULL
   # order df
   combined_counts <- combined_counts[, new_col_order]
-  # remove rownames
-  #rownames(combined_counts) <- NULL
-
+  
+  # apply read count and samples minimum thresholds
   combined_counts <- combined_counts %>% 
     filter(rowSums(select_if(., is.numeric) >= read_count_min, na.rm = TRUE) >= samples_min) %>% 
     mutate(total = rowSums(select_if(., is.numeric), na.rm = TRUE)) 
   
+  # calculate total reads from df
   total_reads_remaining <- as.integer(sum(combined_counts$total))
-  
   combined_counts$total <- NULL
+  
+  # store TXNAME as vector
+  txids <- as.vector(combined_counts$TXNAME)
+  
+  # copy counts to new df
+  combined_props <- combined_counts
+  combined_props$TXNAME <- NULL
+  
+  # calculate proportions per sample
+  combined_props <- data.frame(lapply(combined_props, function(x) x / sum(x)))
+  # add TXNAME back and order df
+  combined_props$TXNAME <- txids
+  combined_props <- combined_props[, new_col_order]
   
   # export files
   write.csv(combined_counts, paste0(outdir, "/", outdir, "_counts.csv"), quote = FALSE, row.names = FALSE)
+  write.csv(combined_props, paste0(outdir, "/", outdir, "_proportions.csv"), quote = FALSE, row.names = FALSE)
 
   write.table(total_reads_remaining, paste0(outdir, "/", "temp_files/remaining_read_sum.txt"), quote = FALSE, row.names = FALSE, col.names = FALSE)
   
   
   
 })
+    
