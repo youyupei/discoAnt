@@ -216,7 +216,7 @@ function mapping_genome_function() {
 		sample_reads="${base%.*}" 
     
 		function map_reads_minimap2() {
-    		minimap2 -ax splice -G"${max_intron_length}"k --splice-flank="$splice_flank" --eqx $REF_GENOME_FN_filt $path_to_reads/${sample_reads}.fa | samtools view -bh > $OUTPUT_NAME/mapped_data/${sample_reads}.bam
+    		minimap2 -ax splice -G"${max_intron_length}"k --splice-flank="$splice_flank" $REF_GENOME_FN_filt $path_to_reads/${sample_reads}.fa | samtools view -bh > $OUTPUT_NAME/mapped_data/${sample_reads}.bam
 		}
 
 		redirect_output map_reads_minimap2
