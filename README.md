@@ -153,7 +153,7 @@ Detailed descriptions of parameters:
 |FASTA|required|NA|Path to the top level directory of sample/barcode directories.|
 |REF_GENOME_FN|required|NA|The reference genome.|
 |ANNA_GTF|required|NA|The reference annotation GTF.|
-|grouping_variable|optional|NULL|A CSV file of sample and group names used for plotting. See example of this in 'sirv_test_data/SIRV_grouping.csv'|
+|grouping_variable|optional|NULL|A CSV file of sample and group names used for plotting. See example of this in 'sirv_test_data/sirv_grouping.csv'|
 |read_count_minimum|optional|5|Known and novel isoforms must meet this threshold in at least 'samples_minimum' number of samples.|
 |samples_minimum|optional|NA|Known and novel isoforms must meet the read count minimum in this many samples. Default value caclulated as number of samples/2 rounded down to nearest integer.|
 |downsampling|optional|TRUE|Whether each sample/barcode should be downsampled to a consistent number of reads.|
