@@ -1,7 +1,15 @@
 #!/usr/bin/env bash
 
-# get directory of current script
+# get directory of IsoLamp script
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+# if no parameters file is provided, exit
+if [ -z ${1} ]
+then
+	echo "Please provide parameters file."
+	echo "Usage: IsoLamp parameters.ini"
+	exit 1
+fi
 
 # source parameters file
 source ${1}
@@ -15,6 +23,7 @@ echo \
 ██ ███████  ██████  ███████ ██   ██ ██      ██ ██  
 "
 
+# version info
 echo "v1.0"
 
 # if the $OUTPUT_NAME directory already exists, exit
@@ -87,14 +96,21 @@ function filter_reference_files() {
 }
 
 function check_for_fastq_or_fasta_files() {
+	# exit if a directory contains empty fasta?
 
 	if [ -d "$FASTA" ] 
 	then
-        
         # use find to search for FASTQ or FASTA files
         if find "$FASTA" -maxdepth 2 -type f \( -name "*.fastq"  -o -name "*.fastq.gz" -o -name "*.fasta" -o -name "*.fa" \) -print -quit | grep -q . 
 		then
-            :
+			# Check for empty files
+        	empty_files=$(find "$FASTA" -type f -empty)
+        	if [ -n "$empty_files" ]
+			then
+           		echo "WARNING: The following empty files were found within subdirectories of $FASTA:"
+            	echo "$empty_files"
+				echo "This may cause the program to fail."
+        	fi
         else
             echo "No FASTQ or FASTA files found within subdirectories of $FASTA"
             exit 1

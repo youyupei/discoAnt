@@ -77,20 +77,25 @@ suppressWarnings({
   
   # store TXNAME as vector
   txids <- as.vector(combined_counts$TXNAME)
-  
+  # 
   # copy counts to new df
   combined_props <- combined_counts
   combined_props$TXNAME <- NULL
   
+  combined_props_names <-c(paste0(colnames(combined_props)))
   # calculate proportions per sample
-  combined_props <- data.frame(lapply(combined_props, function(x) x / sum(x)))
+  combined_props_df <- data.frame(lapply(combined_props, function(x) x / sum(x)))
+  colnames(combined_props_df) <- combined_props_names
   # add TXNAME back and order df
-  combined_props$TXNAME <- txids
-  combined_props <- combined_props[, new_col_order]
+  combined_props_df$TXNAME <- txids
+  combined_props_df <- combined_props_df[, c("TXNAME", combined_props_names)]
+  
+  combined_counts <- combined_counts %>% dplyr::arrange(TXNAME)
+  combined_props_df <- combined_props_df %>% dplyr::arrange(TXNAME)
   
   # export files
   write.csv(combined_counts, paste0(outdir, "/", outdir, "_counts.csv"), quote = FALSE, row.names = FALSE)
-  write.csv(combined_props, paste0(outdir, "/", outdir, "_proportions.csv"), quote = FALSE, row.names = FALSE)
+  write.csv(combined_props_df, paste0(outdir, "/", outdir, "_proportions.csv"), quote = FALSE, row.names = FALSE)
 
   write.table(total_reads_remaining, paste0(outdir, "/", "temp_files/remaining_read_sum.txt"), quote = FALSE, row.names = FALSE, col.names = FALSE)
   
