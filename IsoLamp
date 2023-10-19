@@ -184,6 +184,7 @@ function downsampling_function() {
 	elif [ "$downsampling" == FALSE ]
 	then
 		# set path to reads
+		cp -r $FASTA/* $OUTPUT_NAME/temp_files/reads
 		path_to_reads=$OUTPUT_NAME/temp_files/reads
 
 	fi
@@ -216,7 +217,7 @@ function mapping_genome_function() {
 		sample_reads="${base%.*}" 
     
 		function map_reads_minimap2() {
-    		minimap2 -ax splice -G"${max_intron_length}"k --splice-flank="$splice_flank" --eqx $REF_GENOME_FN_filt $path_to_reads/${sample_reads}.fa | samtools view -bh > $OUTPUT_NAME/mapped_data/${sample_reads}.bam
+    		minimap2 -ax splice -G"${max_intron_length}"k --splice-flank="$splice_flank" $REF_GENOME_FN_filt $path_to_reads/${sample_reads}.fa | samtools view -bh > $OUTPUT_NAME/mapped_data/${sample_reads}.bam
 		}
 
 		redirect_output map_reads_minimap2
@@ -523,6 +524,14 @@ function plot_PCA() {
 
 }
 
+#####plot accuarcy
+
+function plot_accuarcy () {
+	
+	redirect_output Rscript $SCRIPT_DIR/scripts/accuracy.R $OUTPUT_NAME/mapped_data/$OUTPUT_NAME"_primary_merged.bam" "$OUTPUT_NAME/$OUTPUT_NAME"
+
+}
+
 
 function generate_report_function() {
 cat << EOT >> $OUTPUT_NAME/${OUTPUT_NAME}_report.txt
@@ -604,9 +613,13 @@ combine_quants_function
 # some zero count isoforms result after the secound round of quants with salmon
 read_count_function_second_pass
 
-###### plot PCA
+###### Generate plots
 echo "Generating PCA plot..."
 plot_PCA
+
+echo "Generating Accuarcy plot..."
+plot_accuarcy 
+
 ########## 3. Annotating transcripts ##########
 echo "Annotating isoforms..."
 # run with gffcompare
