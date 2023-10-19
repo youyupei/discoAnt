@@ -150,6 +150,9 @@ function concat_files() {
 
 	done
 
+	# set path to reads
+	path_to_reads=$OUTPUT_NAME/temp_files/reads
+	
 	# report metrics
 	num_of_barcodes=$( ls -lh $OUTPUT_NAME/temp_files/reads/*.f* | wc -l )
 	total_reads_input=$( cat $OUTPUT_NAME/temp_files/reads/*.f* | grep "^[>@]" | wc -l )
@@ -197,13 +200,7 @@ function downsampling_function() {
 
 		total_reads_post_downsample=$(cat $OUTPUT_NAME/downsampled_reads/*.f* | grep "^[>@]" | wc -l)
 	
-	elif [ "$downsampling" == FALSE ]
-	then
-		# set path to reads
-		path_to_reads=$OUTPUT_NAME/temp_files/reads
-
 	fi
-
 
 }
 
