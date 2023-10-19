@@ -304,19 +304,19 @@ function read_count_function_first_pass() {
   	fi
 	
 	# filter for bambu isoforms with read count > threshold 
-	cat "$OUTPUT_NAME/bambu/counts_transcript.txt" | awk -v min_count="$read_count_minimum" '{ if ($3 > min_count ) print $1 }' | tail -n +2 > "$OUTPUT_NAME/temp_files/transcripts_combined_counts_1_list.txt"
+	cat "$OUTPUT_NAME/bambu/counts_transcript.txt" | awk -v min_count="$read_count_minimum" '{ if ($3 > min_count ) print $1 }' | tail -n +2 > "$OUTPUT_NAME/temp_files/isoforms_read_count_min_first_pass.txt"
 
 	# subset bambu GTF for the isoforms that passed threshold
-	cat $OUTPUT_NAME/bambu/extended_annotations.gtf | grep -wf $OUTPUT_NAME/temp_files/transcripts_combined_counts_1_list.txt > $OUTPUT_NAME/bambu/extended_annotations_count_1.gtf
+	cat $OUTPUT_NAME/bambu/extended_annotations.gtf | grep -wf $OUTPUT_NAME/temp_files/isoforms_read_count_min_first_pass.txt > $OUTPUT_NAME/bambu/extended_annotations_first_pass.gtf
 	
 	# replace some Bambu naming conventions
-	cat $OUTPUT_NAME/bambu/extended_annotations_count_1.gtf | sed 's/tx./tx/g' | sed 's/BambuTx/tx/g' > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf
-	cat $OUTPUT_NAME/temp_files/transcripts_combined_counts_1_list.txt | sed 's/tx./tx/g' | sed 's/BambuTx/tx/g' | awk '{ print $1"\t"$3}' > $OUTPUT_NAME/temp_files/updated_transcriptome_count_1.txt
+	cat $OUTPUT_NAME/bambu/extended_annotations_first_pass.gtf | sed 's/tx./tx/g' | sed 's/BambuTx/tx/g' > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_first_pass.gtf
+	cat $OUTPUT_NAME/temp_files/isoforms_read_count_min_first_pass.txt | sed 's/tx./tx/g' | sed 's/BambuTx/tx/g' | awk '{ print $1"\t"$3}' > $OUTPUT_NAME/temp_files/updated_transcriptome_first_pass.txt
 
 	# check file exists and is not empty
-	if [ -e "$OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf" ]
+	if [ -e "$OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_first_pass.gtf" ]
 	then 	
-		if [ -s "$OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf" ]
+		if [ -s "$OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_first_pass.gtf" ]
 		then
 			:
 		else
@@ -339,18 +339,18 @@ function primer_site_function() {
 
 	if [ "$primer_site_based_filter" == TRUE ]
 	then
+
 		echo "Filtering based on primer BED files..."
-		# used to be a 5bp window created around primers, do we need this..?
 		
 		# intersect forward and reverse primers with GTF
-		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf | awk '{ if ($3 == "exon") print }' | bedtools intersect -wa -u -F 0.8 -a - -b $forward_primers | grep -o 'transcript_id "[^"]*' | cut -d' ' -f2 | sed 's/"//g' > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_forward_primer_exons.txt
-		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf | awk '{ if ($3 == "exon") print }' | bedtools intersect -wa -u -F 0.8 -a - -b $reverse_primers | grep -o 'transcript_id "[^"]*' | cut -d' ' -f2 | sed 's/"//g' > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_reverse_primer_exons.txt
+		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_first_pass.gtf | awk '{ if ($3 == "exon") print }' | bedtools intersect -wa -u -F 0.8 -a - -b $forward_primers | grep -o 'transcript_id "[^"]*' | cut -d' ' -f2 | sed 's/"//g' > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_forward_primer_exons.txt
+		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_first_pass.gtf | awk '{ if ($3 == "exon") print }' | bedtools intersect -wa -u -F 0.8 -a - -b $reverse_primers | grep -o 'transcript_id "[^"]*' | cut -d' ' -f2 | sed 's/"//g' > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_reverse_primer_exons.txt
 		
 		# combine isoforms found in both forward and reverse primers
 		comm -12 <(sort $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_forward_primer_exons.txt) <(sort $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_reverse_primer_exons.txt) > $OUTPUT_NAME/temp_files/updated_transcriptome.txt
 		
 		# subset GTF that passed counts filtering with new list of isoforms that match primers
-		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf | grep -wf $OUTPUT_NAME/temp_files/updated_transcriptome.txt > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_pass1.gtf
+		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_first_pass.gtf | grep -wf $OUTPUT_NAME/temp_files/updated_transcriptome.txt > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_primer.gtf
 
 		if [ -e "$OUTPUT_NAME/temp_files/updated_transcriptome.txt" ]
 		then 	
@@ -366,24 +366,25 @@ function primer_site_function() {
 			exit 1
 		fi
 
-		# count the number of isoforms kept after primer filtering \
-		count_file1=$(awk '$3 == "transcript" {count++} END {print count}' "$OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_pass1.gtf")
-		count_file2=$(awk '$3 == "transcript" {count++} END {print count}' "$OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf")
+		# sum transcript counts remaining after primer filtering
+		total_kept_counts=$(cat "$OUTPUT_NAME/bambu/counts_transcript.txt" | grep -wf "$OUTPUT_NAME/temp_files/updated_transcriptome.txt" | awk '{total=total+$3} END{printf "%.0f", total}')
+		# sum transcript counts from Bambu
+		total_bambu_counts=$(cat "$OUTPUT_NAME/bambu/counts_transcript.txt" | awk '{total=total+$3} END{printf "%.0f", total}')
+		
+		# calculate 90% of the total transcript counts
+		primer_threshold=$(printf "%.0f" "$(echo "$total_bambu_counts * 0.9" | bc)")
 
-		# calculate 50% of the lines in file2
-		primer_threshold=$(printf "%.0f" "$(echo "$count_file2 * 0.5" | bc)")
-
-		# check if count_file1 is greater than half_count_file2
-		if [ "$count_file1" -lt "$primer_threshold" ] 
+		# check that at least 90% of the counts are remaining after primer filtering
+		if [ "$((total_kept_counts))" -lt "$((primer_threshold))" ] 
 		then
-			echo "WARNING: more than 50% of the isoforms identified with Bambu were removed after primer site filtering"
+			echo "WARNING: primer filtering removed isoforms with >10% of counts assigned by Bambu"
 		fi
 
 	elif [ "$primer_site_based_filter" == FALSE ]
 	then
 		# use isoforms that passed read count filtering 
-		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_count_1.gtf > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_pass1.gtf
-		cat $OUTPUT_NAME/temp_files/updated_transcriptome_count_1.txt > $OUTPUT_NAME/temp_files/updated_transcriptome.txt
+		cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_first_pass.gtf > $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_primer.gtf
+		cat $OUTPUT_NAME/temp_files/updated_transcriptome_first_pass.txt > $OUTPUT_NAME/temp_files/updated_transcriptome.txt
 	fi
 }
 
@@ -392,7 +393,7 @@ function create_metatranscriptome() {
 	mkdir $OUTPUT_NAME/updated_transcriptome
 
 	# create an updated transcriptome fasta with gffread using the bambu isoforms
-	redirect_output gffread -w $OUTPUT_NAME/updated_transcriptome/updated_transcriptome.fa -g $REF_GENOME_FN_filt $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_pass1.gtf
+	redirect_output gffread -w $OUTPUT_NAME/updated_transcriptome/updated_transcriptome.fa -g $REF_GENOME_FN_filt $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_primer.gtf
 	
 	if [ -e "$OUTPUT_NAME/updated_transcriptome/updated_transcriptome.fa" ]
   	then 
@@ -474,14 +475,14 @@ function read_count_function_second_pass() {
 
 	# create list in text file of isoforms that passed threshold
 	# command uses _ and , as sep, prints first column of tx names, removes the word Bambu in tx names, and removes the column header
-	cat $OUTPUT_NAME/${OUTPUT_NAME}_counts.csv | awk -F '[_,]' '{print $1}' | sed 's/Bambu//g' | tail -n +2 > $OUTPUT_NAME/temp_files/transcripts_read_counts_second_pass_list_tmp.txt
+	cat $OUTPUT_NAME/${OUTPUT_NAME}_counts.csv | awk -F '[_,]' '{print $1}' | sed 's/Bambu//g' | tail -n +2 > $OUTPUT_NAME/temp_files/isoforms_read_count_min_second_pass.txt
 	
 	# filter GTF based on isoforms 
-	cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_pass1.gtf | grep -wif $OUTPUT_NAME/temp_files/transcripts_read_counts_second_pass_list_tmp.txt > $OUTPUT_NAME/${OUTPUT_NAME}_isoforms.gtf
+	cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_primer.gtf | grep -wif $OUTPUT_NAME/temp_files/isoforms_read_count_min_second_pass.txt > $OUTPUT_NAME/${OUTPUT_NAME}_isoforms.gtf
 
 	# report metrics
-	filtered_transcripts_known=$( cat $OUTPUT_NAME/temp_files/transcripts_read_counts_second_pass_list_tmp.txt | grep -vi tx | wc -l )
-	filtered_transcripts_novel=$( cat $OUTPUT_NAME/temp_files/transcripts_read_counts_second_pass_list_tmp.txt | grep -i tx | wc -l )
+	filtered_transcripts_known=$( cat $OUTPUT_NAME/temp_files/isoforms_read_count_min_second_pass.txt | grep -vi tx | wc -l )
+	filtered_transcripts_novel=$( cat $OUTPUT_NAME/temp_files/isoforms_read_count_min_second_pass.txt | grep -i tx | wc -l )
 
 	if [ -e "$OUTPUT_NAME/${OUTPUT_NAME}_isoforms.gtf" ]
 	then 	
@@ -525,9 +526,7 @@ function sqanti_function() {
 
 }
 
-
-#### plot PCA 
-
+# plot PCA 
 function plot_PCA() {
 
 	if [ -z "$grouping_variable" ] 
@@ -620,9 +619,11 @@ combine_quants_function
 # some zero count isoforms result after the secound round of quants with salmon
 read_count_function_second_pass
 
-###### plot PCA
+# plot PCA
 echo "Generating PCA plot..."
 plot_PCA
+
+
 ########## 3. Annotating transcripts ##########
 echo "Annotating isoforms..."
 # run with gffcompare
