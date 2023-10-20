@@ -200,6 +200,11 @@ function downsampling_function() {
 
 		total_reads_post_downsample=$(cat $OUTPUT_NAME/downsampled_reads/*.f* | grep "^[>@]" | wc -l)
 	
+
+	elif [ "$downsampling" == FALSE ]
+	then
+		# set path to reads
+		path_to_reads=$OUTPUT_NAME/temp_files/reads
 	fi
 
 }
@@ -535,6 +540,14 @@ function plot_PCA() {
 
 }
 
+#####plot accuarcy
+
+function plot_accuarcy () {
+	
+	redirect_output Rscript $SCRIPT_DIR/scripts/accuracy.R $OUTPUT_NAME/mapped_data/$OUTPUT_NAME"_primary_merged.bam" "$OUTPUT_NAME/$OUTPUT_NAME"
+
+}
+
 
 function generate_report_function() {
 cat << EOT >> $OUTPUT_NAME/${OUTPUT_NAME}_report.txt
@@ -616,10 +629,12 @@ combine_quants_function
 # some zero count isoforms result after the secound round of quants with salmon
 read_count_function_second_pass
 
-# plot PCA
+###### Generate plots
 echo "Generating PCA plot..."
 plot_PCA
 
+echo "Generating Accuarcy plot..."
+plot_accuarcy 
 
 ########## 3. Annotating transcripts ##########
 echo "Annotating isoforms..."
