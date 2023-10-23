@@ -17,10 +17,15 @@ dependencies:
   - r-base
   - r-biocmanager
   - r-optparse
+  - r-dplyr
   - bioconductor-bambu
   - r-factominer
   - r-factoextra
   - r-ggrepel
+  - r-rstatix
+  - r-reshape
+  - r-purrr
+  - r-ggplot2
 #  - numpy
 #  - openssl
 #  - pybedtools
@@ -28,7 +33,6 @@ dependencies:
 #  - scipy
 #  - cython
 #  - scikit-learn
-  - r-ggplot2
 #  - r-ggplotify
 #  - biopython
 #  - bx-python

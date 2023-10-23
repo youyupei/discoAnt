@@ -66,6 +66,7 @@ This should produce a folder called 'SIRV5_test' which contains the expected out
 ## Dependencies
 All dependencies and R libraries are automatically built in a conda environment when the setup script is executed.
 
+Packages:
   - python>=3.7.6
   - BBMap
   - bedtools
@@ -74,14 +75,20 @@ All dependencies and R libraries are automatically built in a conda environment 
   - gffread
   - gffcompare
   - minimap2
+
+  R and libraries:
   - R>=4.3
   - Bioconductor (R package)
-  - optparse (R package)
-  - bambu>=3.2.4 (Bioconductor R package)
-  - factominer (R package)
-  - factoextra (R package)
-  - ggrepel (R package)
-  - ggplot2 (R package)
+  - bambu>=3.2.4 (Bioconductor)
+  - optparse
+  - dplyr
+  - factominer
+  - factoextra
+  - ggrepel
+  - ggplot2
+  - reshape
+  - rstatix
+  - purrr
 
 ## Input Data
 The pipeline is designed to run on barcoded data produced by Oxford Nanopore Technologies, typically from amplicon sequencing of a gene of interest. This is typically a directory containing subdirectories titled 'barcode01', 'barcode02' etc. Each barcode directory contains either single or multiple FASTA or FASTQ files of reads. If you have multiple experiments amplifying different genes, run the pipeline once for each gene.
@@ -95,9 +102,9 @@ Basic parameters file:
 ```
 OUTPUT_NAME=CLCN3
 ENSG_ID=ENSG00000109572
-FASTA="path/to/sample/fa_folders"
-REF_GENOME_FN="path/to/hg38.fa"
-ANNA_GTF="path/to/gencode.v44.annotation.gtf"
+READS="path/to/sample/fa_folders"
+GENOME="path/to/hg38.fa"
+ANNOTATION="path/to/gencode.v44.annotation.gtf"
 ```
 Full parameters file (with comments):
 ```
@@ -111,14 +118,14 @@ ENSG_ID=ENSG00000109572
 ## Paths to data ##
 # standard output for barcoded amplicon sequencing is multiple barcode/sample folers containing fastq or fasta files
 # supports .fasta or .fastq
-FASTA="path/to/sample/fa_folders"
+READS="path/to/sample/fa_folders"
 # path to reference genome 
-REF_GENOME_FN="path/to/hg38.fa"
+GENOME="path/to/hg38.fa"
 # path to reference annotation
-ANNA_GTF="path/to/gencode.v44.annotation.gtf"
+ANNOTATION="path/to/gencode.v44.annotation.gtf"
 
 # path to a CSV of sample IDs and group IDs
-grouping_variable="path/to/group_ids.csv" # default is NULL, leave blank for default
+grouping_data="path/to/group_ids.csv" # default is NULL, leave blank for default
 
 ## Minimum read count per isoform threshold ##
 read_count_minimum=5 # default is 5, leave blank for default
@@ -142,18 +149,18 @@ reverse_primers="path/to/reverse.bed" # default is NULL
 max_intron_length=400 
 # bambu parameters, leave blank for default
 bambu_ndr=1 
-bambu_min_gene_fraction=0.005
+bambu_min_gene_fraction=0.001
 ```
 
 Detailed descriptions of parameters:
 |Parameter|Type|Default|Description| 
 |---|---|---|---|
 |OUTPUT_NAME|required|NA|A directory will be created with this name, we suggest using the gene name.|
-|ENSG_ID|required|NA|The ENSEMBL gene ID. This is used to filter the reference genome and annotation. An ENSEMBL ID is also required for visualisation with IsoVis. If this ID not available, use the gene name as it appears in the GTF.| 
-|FASTA|required|NA|Path to the top level directory of sample/barcode directories.|
-|REF_GENOME_FN|required|NA|The reference genome.|
-|ANNA_GTF|required|NA|The reference annotation GTF.|
-|grouping_variable|optional|NULL|A CSV file of sample and group names used for plotting. See example of this in 'sirv_test_data/sirv_grouping.csv'|
+|ENSG_ID|required|NA|The ENSEMBL gene ID. This is used to filter the reference genome and annotation. An ENSEMBL ID is also required for visualisation with IsoVis. If this ID not available, use the gene name as it appears in the GTF (as in the 'sirv_test_data/sirv_params.ini' file).|
+|READS|required|NA|Path to the top level directory of sample/barcode directories.|
+|GENOME|required|NA|The reference genome.|
+|ANNOTATION|required|NA|The reference annotation GTF.|
+|grouping_data|optional|NULL|A CSV file of sample and group names used for plotting. The first row must be 'sample,group'. See example of this below and in 'sirv_test_data/sirv_grouping.csv'|
 |read_count_minimum|optional|5|Known and novel isoforms must meet this threshold in at least 'samples_minimum' number of samples.|
 |samples_minimum|optional|NA|Known and novel isoforms must meet the read count minimum in this many samples. Default value caclulated as number of samples/2 rounded down to nearest integer.|
 |downsampling|optional|TRUE|Whether each sample/barcode should be downsampled to a consistent number of reads.|
@@ -163,15 +170,25 @@ Detailed descriptions of parameters:
 |reverse_primers|optional|NULL|BED file of reverse. Only checked if Primer filter is TRUE.|
 |max_intron_length|optional|400|Controls the '-G' flag in minimap2 as some complex genes have long introns.|
 |bambu_ndr|optional|1|Controls the bambu 'NDR' option. We set this to 1 by default to return all possible novel isoforms and filter them downstream.|
-|bambu_min_gene_fraction|optional|0.005|Controls the bambu 'min.readFractionByGene' option. We set this to 0.005 by default to return isoforms with a relative abundance of >0.5%.|
+|bambu_min_gene_fraction|optional|0.001|Controls the bambu 'min.readFractionByGene' option.|
 
+Example grouping_data file:
+```
+sample,group
+barcode01,group1
+barcode02,group1
+barcode03,group2
+barcode04,group2
+```
 
 ## Output
-The main output of IsoLamp includes three files:
+The main output of IsoLamp includes:
   - a basic text report
   - annotation of known and novel isoforms as a GTF
   - quantification of known and novel isoforms (counts and propoprtions) as CSVs
   - a PCA plot of samples/barcodes
+  - an accuracy plot of all input reads
+  - if applicable, a CSV output of t-test results comparing isoform proportions between groups
 
 ## Visualisation with IsoVis
 The results from the IsoLamp pipeline can be visualised using IsoVis: https://isomix.org/isovis.

@@ -50,20 +50,20 @@ plot_pca <- function(count_data, output_prefix, grouping_variable) {
   
   # Rename columns for the PCA data frame (PC1, PC2, etc.)
   colnames(pca_data) <- c(paste0("PC", 1:ncol(pca_data)))
-  pca_data$Sample <- rownames(pca_data)
+  pca_data$sample <- rownames(pca_data)
   
   if (is.null(grouping_variable)) {
     # If grouping_variable is NULL, set the "Group" column to 1 for all samples
-    pca_data$Group <- "Group A"
+    pca_data$group <- "Group A"
     merged_df <- pca_data
   } else {
     # Read in the grouping variable
     d.f <- read.csv(grouping_variable, header = TRUE)
-    merged_df <- merge(d.f, pca_data, by = "Sample", all = TRUE)
+    merged_df <- merge(d.f, pca_data, by = "sample", all = TRUE)
   }
  
   # Create a PCA plot using ggplot2
-  pca_plot <- ggplot(merged_df, aes(x = PC1, y = PC2, color = Group, label = merged_df$Sample)) +
+  pca_plot <- ggplot(merged_df, aes(x = PC1, y = PC2, color = group, label = merged_df$sample)) +
     geom_point(size = 3, alpha = 0.6) +  # Customize point size and color
     geom_text_repel(
       hjust = -0.2, vjust = -0.5, size = 4, color = "black",

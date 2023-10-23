@@ -50,20 +50,20 @@ function redirect_output() {
 # main script functions
 function filter_reference_files() {
 	
-	echo "Running on reads in: $FASTA"
+	echo "Running on reads in: $READS"
 	echo "Indexing and filtering reference files..."
 
 	# filter GTF by ensembl id
-	grep $ENSG_ID $ANNA_GTF > $OUTPUT_NAME/temp_files/filt_chr.gtf
-	ANNA_GTF_filt=$OUTPUT_NAME/temp_files/filt_chr.gtf
+	grep $ENSG_ID $ANNOTATION > $OUTPUT_NAME/temp_files/filt_chr.gtf
+	ANNOTATION_FILT=$OUTPUT_NAME/temp_files/filt_chr.gtf
 
 	# get chr from GTF to filter genome
-	chr=$( cat $ANNA_GTF_filt | sed -n '10p' | awk '{ print $1}' )
+	chr=$( cat $ANNOTATION_FILT | sed -n '10p' | awk '{ print $1}' )
 	
 	# check file exists and is not empty
-	if [ -e "$ANNA_GTF_filt" ]
+	if [ -e "$ANNOTATION_FILT" ]
 	then 	
-		if [ -s "$ANNA_GTF_filt" ]
+		if [ -s "$ANNOTATION_FILT" ]
 		then
 			:
 		else
@@ -76,12 +76,12 @@ function filter_reference_files() {
 	fi
 
 	# filter and index genome FASTA
-	samtools faidx $REF_GENOME_FN $chr -o $OUTPUT_NAME/temp_files/filt_chr.fa
-	REF_GENOME_FN_filt=$OUTPUT_NAME/temp_files/filt_chr.fa
+	samtools faidx $GENOME $chr -o $OUTPUT_NAME/temp_files/filt_chr.fa
+	GENOME_FILT=$OUTPUT_NAME/temp_files/filt_chr.fa
 
-	if [ -e "$REF_GENOME_FN_filt" ]
+	if [ -e "$GENOME_FILT" ]
 	then 	
-		if [ -s "$REF_GENOME_FN_filt" ]
+		if [ -s "$GENOME_FILT" ]
 		then
 			:
 		else
@@ -98,26 +98,26 @@ function filter_reference_files() {
 function check_for_fastq_or_fasta_files() {
 	# exit if a directory contains empty fasta?
 
-	if [ -d "$FASTA" ] 
+	if [ -d "$READS" ] 
 	then
         # use find to search for FASTQ or FASTA files
-        if find "$FASTA" -maxdepth 2 -type f \( -name "*.fastq"  -o -name "*.fastq.gz" -o -name "*.fasta" -o -name "*.fa" \) -print -quit | grep -q . 
+        if find "$READS" -maxdepth 2 -type f \( -name "*.fastq"  -o -name "*.fastq.gz" -o -name "*.fasta" -o -name "*.fa" \) -print -quit | grep -q . 
 		then
 			# Check for empty files
-        	empty_files=$(find "$FASTA" -type f -empty)
+        	empty_files=$(find "$READS" -type f -empty)
         	if [ -n "$empty_files" ]
 			then
-           		echo "WARNING: The following empty files were found within subdirectories of $FASTA:"
+           		echo "WARNING: The following empty files were found within subdirectories of $READS:"
             	echo "$empty_files"
 				echo "This may cause the program to fail."
         	fi
         else
-            echo "No FASTQ or FASTA files found within subdirectories of $FASTA"
+            echo "No FASTQ or FASTA files found within subdirectories of $READS"
             exit 1
         fi
 
     else
-        echo "Directory not found: $FASTA"
+        echo "Directory not found: $READS"
         exit 1
     fi
     
@@ -127,8 +127,8 @@ function concat_files() {
 	
 	mkdir $OUTPUT_NAME/temp_files/reads
 
-	# run on all subdirectories in $FASTA
-	find "$FASTA" -mindepth 1 -maxdepth 1 -type d | while read -r dir
+	# run on all subdirectories in $READS
+	find "$READS" -mindepth 1 -maxdepth 1 -type d | while read -r dir
 	do
 
 		# use basename to extract just the directory name
@@ -136,7 +136,7 @@ function concat_files() {
 
 		# if BBMap works on gzipped files this may not be required, minimap2 works on gzipped files
 		# gunzip zipped files
-		for gzipped_file in "$FASTA/$dir_name"/*.gz 
+		for gzipped_file in "$READS/$dir_name"/*.gz 
 		do
 			if [ -f "$gzipped_file" ] 
 			then
@@ -146,7 +146,7 @@ function concat_files() {
 		done
 		
 		# combine all sample read files into one file
-		cat $FASTA/$dir_name/*.fa* > $OUTPUT_NAME/temp_files/reads/$dir_name.fa
+		cat $READS/$dir_name/*.fa* > $OUTPUT_NAME/temp_files/reads/$dir_name.fa
 
 	done
 
@@ -199,12 +199,6 @@ function downsampling_function() {
 		path_to_reads=$OUTPUT_NAME/downsampled_reads
 
 		total_reads_post_downsample=$(cat $OUTPUT_NAME/downsampled_reads/*.f* | grep "^[>@]" | wc -l)
-	
-
-	elif [ "$downsampling" == FALSE ]
-	then
-		# set path to reads
-		path_to_reads=$OUTPUT_NAME/temp_files/reads
 	fi
 
 }
@@ -234,7 +228,7 @@ function mapping_genome_function() {
 		sample_reads="${base%.*}" 
     
 		function map_reads_minimap2() {
-    		minimap2 -ax splice -G"${max_intron_length}"k --splice-flank="$splice_flank" $REF_GENOME_FN_filt $path_to_reads/${sample_reads}.fa | samtools view -bh > $OUTPUT_NAME/mapped_data/${sample_reads}.bam
+    		minimap2 -ax splice -G"${max_intron_length}"k --splice-flank="$splice_flank" $GENOME_FILT $path_to_reads/${sample_reads}.fa | samtools view -bh > $OUTPUT_NAME/mapped_data/${sample_reads}.bam
 		}
 
 		redirect_output map_reads_minimap2
@@ -272,13 +266,13 @@ function run_bambu_function() {
 
 	if [ -z "$bambu_min_gene_fraction" ] 
   	then
-    	bambu_min_gene_fraction=0.005 # set to the default value
+    	bambu_min_gene_fraction=0.001 # set to the default value
   	fi
 
 	# run bambu Rscript 
 	redirect_output Rscript $SCRIPT_DIR/scripts/bambu_tx_discovery.R -b $OUTPUT_NAME/mapped_data/${OUTPUT_NAME}_primary_merged.bam \
-		-f $REF_GENOME_FN_filt \
-		-t $ANNA_GTF_filt \
+		-f $GENOME_FILT \
+		-t $ANNOTATION_FILT \
 		-n $bambu_ndr \
 		-g $bambu_min_gene_fraction \
 		-o $OUTPUT_NAME/bambu
@@ -391,11 +385,11 @@ function primer_site_function() {
 }
 
 function create_metatranscriptome() {
-	echo "Creating an updated transcriptome with novel isoforms..."
+	echo "Mapping to updated transcriptome with novel isoforms..."
 	mkdir $OUTPUT_NAME/updated_transcriptome
 
 	# create an updated transcriptome fasta with gffread using the bambu isoforms
-	redirect_output gffread -w $OUTPUT_NAME/updated_transcriptome/updated_transcriptome.fa -g $REF_GENOME_FN_filt $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_primer.gtf
+	redirect_output gffread -w $OUTPUT_NAME/updated_transcriptome/updated_transcriptome.fa -g $GENOME_FILT $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_isoforms_primer.gtf
 	
 	if [ -e "$OUTPUT_NAME/updated_transcriptome/updated_transcriptome.fa" ]
   	then 
@@ -418,7 +412,7 @@ function create_metatranscriptome() {
 }
 
 function remapping_function() {
-	echo "Mapping reads..."
+	
 	mkdir $OUTPUT_NAME/updated_transcriptome/salmon_quants
 
 	# function to loop through reads from each sample/barcode and quantify with salmon
@@ -506,7 +500,7 @@ function gffcomp_function() {
 	mkdir $OUTPUT_NAME/annotated_isoforms
 
 	# run gffcompare on the new isoforms and original reference GTF
-	redirect_output gffcompare -r $ANNA_GTF_filt -o $OUTPUT_NAME/annotated_isoforms/gffcomp $OUTPUT_NAME/${OUTPUT_NAME}_isoforms.gtf
+	redirect_output gffcompare -r $ANNOTATION_FILT -o $OUTPUT_NAME/annotated_isoforms/gffcomp $OUTPUT_NAME/${OUTPUT_NAME}_isoforms.gtf
 	
 	# put gffcompare outputs in directory
 	mv $OUTPUT_NAME/gffcomp.* $OUTPUT_NAME/annotated_isoforms/
@@ -521,7 +515,7 @@ function sqanti_function() {
 		
 	python $SCRIPT_DIR/scripts/SQANTI3/sqanti3_qc.py \
 		$OUTPUT_NAME/${OUTPUT_NAME}_isoforms.gtf \
-		$ANNA_GTF_filt $REF_GENOME_FN_filt \
+		$ANNOTATION_FILT $GENOME_FILT \
 		-d $OUTPUT_NAME/sqanti -o $OUTPUT_NAME/annotated_isoforms --report skip
 		#--CAGE_peak $REF_HG38/refTSS_v3.3_human_coordinate.hg38.bed \
 		#--polyA_peak $REF_HG38/atlas.clusters.2.0.GRCh38.96.bed --polyA_motif_list $REF_HG38/human.polyA.list.txt
@@ -531,20 +525,32 @@ function sqanti_function() {
 # plot PCA 
 function plot_PCA() {
 
-	if [ -z "$grouping_variable" ] 
+	if [ -z "$grouping_data" ] 
 	then
-		grouping_variable=NULL # set to the default value if empty
+		grouping_data=NULL # set to the default value if empty
 	fi
 
-	redirect_output Rscript $SCRIPT_DIR/scripts/plot_PCA.R -i $OUTPUT_NAME/$OUTPUT_NAME"_counts.csv" -o "$OUTPUT_NAME/$OUTPUT_NAME" -g $grouping_variable
+	redirect_output Rscript $SCRIPT_DIR/scripts/plot_PCA.R -i $OUTPUT_NAME/$OUTPUT_NAME"_counts.csv" -o "$OUTPUT_NAME/$OUTPUT_NAME" -g $grouping_data
 
 }
 
-#####plot accuarcy
-
+# plot accuarcy
 function plot_accuarcy () {
 	
 	redirect_output Rscript $SCRIPT_DIR/scripts/accuracy.R $OUTPUT_NAME/mapped_data/$OUTPUT_NAME"_primary_merged.bam" "$OUTPUT_NAME/$OUTPUT_NAME"
+
+}
+
+# compare proportions between groups
+function compare_proportions_test() {
+	# only run if grouping is provided
+	if [ -z "$grouping_data" ] 
+	then
+		:
+	else
+		echo "Comparing isoform proportions between groups..."
+		redirect_output Rscript $SCRIPT_DIR/scripts/prop_t_test.R -i $OUTPUT_NAME/$OUTPUT_NAME"_proportions.csv" -o "$OUTPUT_NAME/$OUTPUT_NAME" -g $grouping_data
+	fi
 
 }
 
@@ -633,8 +639,11 @@ read_count_function_second_pass
 echo "Generating PCA plot..."
 plot_PCA
 
-echo "Generating Accuarcy plot..."
+echo "Generating accuarcy plot..."
 plot_accuarcy 
+
+# proportion test between groups
+compare_proportions_test
 
 ########## 3. Annotating transcripts ##########
 echo "Annotating isoforms..."
