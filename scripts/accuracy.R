@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+bamfile <- "~/Documents/sirv_benchmarking_JAQ/sirv5_c/mapped_data/sirv5_c_primary_merged.bam"
 
 # Function for importing BAM file and calc accuracy 
 import_bam_get_accuracy <- function(bamfile) {
@@ -13,7 +14,7 @@ import_bam_get_accuracy <- function(bamfile) {
   cigar_table <- cigarOpTable(bam@cigar)
   
   # CIGAR types 
-  col_names_extract <- c("M", "I", "D", "S", "H")
+  col_names_extract <- c("M", "X", "=", "I", "D", "S", "H")
   
   # Add summarised CIGAR strings
   mcols(bam)[paste0("nbr", col_names_extract)] <- mapply(function(col) cigar_table[, col], col_names_extract)
@@ -23,8 +24,13 @@ import_bam_get_accuracy <- function(bamfile) {
   bam_data <- as.data.table(bam %>% setNames(NULL), stringsAsFactors = FALSE) %>%
     dplyr::select(-cigar, -njunc)
   
+  # eqx flag
   bam_data <- bam_data %>% 
-    dplyr::mutate(read_accuracy=(nbrM+nbrI+nbrD-NM)/(nbrM+nbrI+nbrD))
+    dplyr::mutate(read_accuracy=(nbrX+nbr.+nbrI+nbrD-NM)/(nbrX+nbr.+nbrI+nbrD))
+  
+  # no eqx flag
+  #bam_data <- bam_data %>% 
+    #dplyr::mutate(read_accuracy=(nbrM+nbrI+nbrD-NM)/(nbrM+nbrI+nbrD))
   
   return(bam_data)
   

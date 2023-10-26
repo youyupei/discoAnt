@@ -1,4 +1,4 @@
-name: IsoLamp
+name: IsoNano
 channels:
   - conda-forge
   - bioconda
@@ -13,7 +13,13 @@ dependencies:
   - gffread
   - gffcompare
   - minimap2
-  - python>=3.7.6
+  - python=3.7
+  - pandas
+  - pysam
+  - numpy
+  - tqdm
+  - h5py
+  - matplotlib
   - r-base
   - r-biocmanager
   - r-optparse
@@ -26,6 +32,10 @@ dependencies:
   - r-reshape
   - r-purrr
   - r-ggplot2
+  - pip
+  - pip:
+    - tables
+# SQANTI
 #  - numpy
 #  - openssl
 #  - pybedtools

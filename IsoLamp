@@ -228,7 +228,7 @@ function mapping_genome_function() {
 		sample_reads="${base%.*}" 
     
 		function map_reads_minimap2() {
-    		minimap2 -ax splice -G"${max_intron_length}"k --splice-flank="$splice_flank" $GENOME_FILT $path_to_reads/${sample_reads}.fa | samtools view -bh > $OUTPUT_NAME/mapped_data/${sample_reads}.bam
+    		minimap2 -ax splice --eqx -G"${max_intron_length}"k --splice-flank="$splice_flank" $GENOME_FILT $path_to_reads/${sample_reads}.fa | samtools view -bh > $OUTPUT_NAME/mapped_data/${sample_reads}.bam
 		}
 
 		redirect_output map_reads_minimap2
@@ -255,6 +255,35 @@ function mapping_genome_function() {
 
 }
 
+function get_JWRs() {
+	
+	if [ "$extract_high_quality_SJs" == TRUE ]
+	then
+		
+		if [ -z "$junction_window" ]
+		then
+    		junction_window=25 # set to the default value if empty
+  		fi
+
+		if [ -z "$JAQ" ]
+		then
+    		JAQ=0.8 # set to the default value if empty
+  		fi
+		
+		python3 $SCRIPT_DIR/scripts/NanoSplicer_JWR_checker.py --window $junction_window $OUTPUT_NAME/mapped_data/${OUTPUT_NAME}_primary_merged.bam $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_JAQ.csv
+		Rscript $SCRIPT_DIR/scripts/read_list_high_JAQ.R -i $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_JAQ.csv -j $JAQ -o $OUTPUT_NAME
+		samtools view -N $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_reads_above_JAQ_minimum.txt -o $OUTPUT_NAME/mapped_data/${OUTPUT_NAME}_filtered_high_JAQ_reads.bam $OUTPUT_NAME/mapped_data/${OUTPUT_NAME}_primary_merged.bam
+
+		bam_for_bambu=$OUTPUT_NAME/mapped_data/${OUTPUT_NAME}_filtered_high_JAQ_reads.bam
+
+	else
+		#echo "Skipping junctions"
+		bam_for_bambu=$OUTPUT_NAME/mapped_data/${OUTPUT_NAME}_primary_merged.bam
+
+	fi
+
+}
+
 function run_bambu_function() {
 	echo "Identifying novel isoforms with Bambu..."
 	mkdir $OUTPUT_NAME/bambu
@@ -270,7 +299,7 @@ function run_bambu_function() {
   	fi
 
 	# run bambu Rscript 
-	redirect_output Rscript $SCRIPT_DIR/scripts/bambu_tx_discovery.R -b $OUTPUT_NAME/mapped_data/${OUTPUT_NAME}_primary_merged.bam \
+	redirect_output Rscript $SCRIPT_DIR/scripts/bambu_tx_discovery.R -b $bam_for_bambu \
 		-f $GENOME_FILT \
 		-t $ANNOTATION_FILT \
 		-n $bambu_ndr \
@@ -549,11 +578,10 @@ function compare_proportions_test() {
 		:
 	else
 		echo "Comparing isoform proportions between groups..."
-		redirect_output Rscript $SCRIPT_DIR/scripts/prop_t_test.R -i $OUTPUT_NAME/$OUTPUT_NAME"_proportions.csv" -o "$OUTPUT_NAME/$OUTPUT_NAME" -g $grouping_data
+		redirect_output Rscript $SCRIPT_DIR/scripts/prop_t_test.R -i $OUTPUT_NAME/$OUTPUT_NAME"_proportions.csv" -o $OUTPUT_NAME -g $grouping_data
 	fi
 
 }
-
 
 function generate_report_function() {
 cat << EOT >> $OUTPUT_NAME/${OUTPUT_NAME}_report.txt
@@ -602,8 +630,8 @@ downsampling_function
 # run minimap2
 mapping_genome_function
 
-
 ########## 2.a. Correcting and collapsing transcripts with bambu ##########
+get_JWRs
 
 # run bambu in R
 run_bambu_function

@@ -30,9 +30,6 @@ grouping_variable <- (opt$grouping_variable)
 groups <- suppressWarnings(read.csv(grouping_variable, header=T))
 counts <- suppressWarnings(read.csv(count_props, header=T))
 
-#groups <- read.csv("~/Documents/ITIH4/amplicon_data/groups.csv",header=T)
-#counts <- read.csv("~/Documents/ITIH4/amplicon_data/ITIH4/ITIH4_proportions.csv", header = TRUE)
-
 # melt df into long format
 counts_melt <- reshape::melt(counts, variable_name="sample")
 # merge with groups variable
@@ -40,14 +37,14 @@ counts_merged <- merge(counts_melt, groups, by="sample", all.x=T)
 
 # function to perform t test
 compare_proportions_between_groups <- function(df) {
-  
+  #df <- list_tx[[1]]
   # store TXNAME
   tx_id <- df$TXNAME
   
   # run t test
   tmp <- tryCatch(
         {
-          df %>% t_test(value ~ group, p.adjust.method = "none", detailed = TRUE, paired = FALSE, alternative = "two.sided")
+          df %>% rstatix::t_test(value ~ group, p.adjust.method = "fdr", detailed = TRUE, paired = FALSE, alternative = "two.sided")
         },
         error = function(e) {
           return(NA)
@@ -60,13 +57,14 @@ compare_proportions_between_groups <- function(df) {
   } else {
         tmp
         result <- tmp %>% 
-          mutate(TXNAME = tx_id[1]) %>% 
+          dplyr::mutate(TXNAME = tx_id[1]) %>% 
           subset(select = c("TXNAME", "group1", "group2", "estimate", "estimate1", "estimate2", "n1", "n2", "p")) %>% 
           dplyr::rename("mean_prop_diff" = "estimate",
                         "group1_mean_prop" = "estimate1",
                         "group2_mean_prop" = "estimate2",
                         "group1_obs" = "n1",
-                        "group2_obs" = "n2")
+                        "group2_obs" = "n2",
+                        "padj" = "p")
   }
   
   return(result)
@@ -88,11 +86,8 @@ if (all(is.na(results_list_tx))) {
   # combine results output into a dataframe
   results_list_tx_df <- bind_rows(results_list_tx, .id = c("TXNAME"))
   
-  # adjust p values
-  results_list_tx_df$padj <- p.adjust(results_list_tx_df$p, method="fdr", n=length(unique(c(results_list_tx_df$TXNAME))))
-  
   # output
-  write.csv(results_list_tx_df, paste0(output_prefix, "_prop_t_test_results.csv"), row.names=F, quote=F)
+  write.csv(results_list_tx_df, paste0(output_prefix, "/", output_prefix, "_prop_t_test_results.csv"), row.names=F, quote=F)
   print("Complete")
 }
 
