@@ -1,4 +1,4 @@
-name: IsoNano
+name: IsoLamp
 channels:
   - conda-forge
   - bioconda
@@ -18,8 +18,6 @@ dependencies:
   - pysam
   - numpy
   - tqdm
-  - h5py
-  - matplotlib
   - r-base
   - r-biocmanager
   - r-optparse
@@ -32,9 +30,6 @@ dependencies:
   - r-reshape
   - r-purrr
   - r-ggplot2
-  - pip
-  - pip:
-    - tables
 # SQANTI
 #  - numpy
 #  - openssl
@@ -46,3 +41,4 @@ dependencies:
 #  - r-ggplotify
 #  - biopython
 #  - bx-python
+#  - bcbio-gff

@@ -41,7 +41,7 @@ mkdir $OUTPUT_NAME/temp_files
 log_file="$OUTPUT_NAME/IsoLamp.logs"
 # function to redirect output to the log file
 function redirect_output() {
-    # Redirect both stdout (1) and stderr (2) to the log file
+    # Redirect both stdout (1) and stderr (2) to the logs file
     {
         "$@"
     } >> "$log_file" 2>&1
@@ -274,10 +274,12 @@ function get_JWRs() {
 		Rscript $SCRIPT_DIR/scripts/read_list_high_JAQ.R -i $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_JAQ.csv -j $JAQ -o $OUTPUT_NAME
 		samtools view -N $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_reads_above_JAQ_minimum.txt -o $OUTPUT_NAME/mapped_data/${OUTPUT_NAME}_filtered_high_JAQ_reads.bam $OUTPUT_NAME/mapped_data/${OUTPUT_NAME}_primary_merged.bam
 
+		number_reads_SJ=$(cat $OUTPUT_NAME/temp_files/${OUTPUT_NAME}_reads_above_JAQ_minimum.txt | wc -l)
+
 		bam_for_bambu=$OUTPUT_NAME/mapped_data/${OUTPUT_NAME}_filtered_high_JAQ_reads.bam
 
 	else
-		#echo "Skipping junctions"
+		
 		bam_for_bambu=$OUTPUT_NAME/mapped_data/${OUTPUT_NAME}_primary_merged.bam
 
 	fi
@@ -528,6 +530,9 @@ function read_count_function_second_pass() {
 function gffcomp_function() {
 	mkdir $OUTPUT_NAME/annotated_isoforms
 
+	# create file of bambu tx classes for remaining isoforms
+	{ head -n 1 $OUTPUT_NAME/bambu/bambu_tx_classes.txt && grep -wif $OUTPUT_NAME/temp_files/isoforms_read_count_min_second_pass.txt $OUTPUT_NAME/bambu/bambu_tx_classes.txt; } > $OUTPUT_NAME/annotated_isoforms/${OUTPUT_NAME}_bambu_isoform_classes.txt
+	
 	# run gffcompare on the new isoforms and original reference GTF
 	redirect_output gffcompare -r $ANNOTATION_FILT -o $OUTPUT_NAME/annotated_isoforms/gffcomp $OUTPUT_NAME/${OUTPUT_NAME}_isoforms.gtf
 	
@@ -551,7 +556,6 @@ function sqanti_function() {
 
 }
 
-# plot PCA 
 function plot_PCA() {
 
 	if [ -z "$grouping_data" ] 
@@ -563,14 +567,12 @@ function plot_PCA() {
 
 }
 
-# plot accuarcy
 function plot_accuarcy () {
 	
 	redirect_output Rscript $SCRIPT_DIR/scripts/accuracy.R $OUTPUT_NAME/mapped_data/$OUTPUT_NAME"_primary_merged.bam" "$OUTPUT_NAME/$OUTPUT_NAME"
 
 }
 
-# compare proportions between groups
 function compare_proportions_test() {
 	# only run if grouping is provided
 	if [ -z "$grouping_data" ] 
@@ -588,9 +590,10 @@ cat << EOT >> $OUTPUT_NAME/${OUTPUT_NAME}_report.txt
 `date`
 
 Filters applied:
-	Primer site filter: $primer_site_based_filter
 	Downsampling: $downsampling
 	Downsampled to number of reads: $number_reads_downsample
+	Primer site filter: $primer_site_based_filter
+	Extract high quality splice junctions: $extract_high_quality_SJs
 	Read count minimum: $read_count_minimum
 	Samples required to meet read count minimum: $samples_minimum
 	Bambu novel discovery rate (NDR): $bambu_ndr
@@ -601,6 +604,7 @@ Total number of reads in samples/barcodes: $total_reads_input
 
 Total number of reads in samples/barcodes post-downsampling: $total_reads_post_downsample
 Number of reads mapped to genome: $number_reads_mapped
+Number of reads with high quality splice junctions: $number_reads_SJ
 
 Known isoforms identified: $filtered_transcripts_known
 Novel isoforms identified: $filtered_transcripts_novel
@@ -631,6 +635,8 @@ downsampling_function
 mapping_genome_function
 
 ########## 2.a. Correcting and collapsing transcripts with bambu ##########
+
+# run JWR jecker python script
 get_JWRs
 
 # run bambu in R

@@ -23,7 +23,6 @@ PIPELINE.
 - [Troubleshooting](#Troubleshooting)
 
 ## Installation
-
 Download the pipeline with Git:
 ```
 git clone https://github.com/youyupei/discoAnt.git
@@ -37,7 +36,6 @@ bash scripts/IsoLamp_setup
 **Note:** depending on your operating system you may need to edit the setup script to either 'conda activate' or 'source activate'.
 
 ## General Command Line Usage
-
 We suggest adding IsoLamp to your PATH so it can be run from any directory:
 ```
 echo 'export PATH=~/path/to/IsoLamp:$PATH' >> ~/.bash_profile
@@ -67,7 +65,11 @@ This should produce a folder called 'SIRV5_test' which contains the expected out
 All dependencies and R libraries are automatically built in a conda environment when the setup script is executed.
 
 Packages:
-  - python>=3.7.6
+  - python=3.7
+  - pandas
+  - pysam
+  - numpy
+  - tqdm
   - BBMap
   - bedtools
   - samtools
@@ -75,6 +77,7 @@ Packages:
   - gffread
   - gffcompare
   - minimap2
+
 
   R and libraries:
   - R>=4.3
@@ -144,6 +147,14 @@ primer_site_based_filter=TRUE # default is FALSE
 forward_primers="path/to/forward.bed" # default is NULL
 reverse_primers="path/to/reverse.bed" # default is NULL
 
+## Extract high quality splice junctions to be set to TRUE or FALSE ##
+# Recommended to increase novel isoform accuracy
+extract_high_quality_SJs=TRUE # default is FALSE
+# minimum junction alignment quality
+JAQ=0.8
+# window (nt) upstream and downstream of splice junction
+junction_window=25 
+
 ## Other options ##
 # minimap2 -G intron length, leave blank for default
 max_intron_length=400 
@@ -168,6 +179,9 @@ Detailed descriptions of parameters:
 |primer_site_based_filter|optional|FALSE|Whether to remove isoforms that do not overlap the primers used to perform amplicon sequencing. We recommend using this option.|
 |forward_primers|optional|NULL|BED file of forward primers. Only checked if Primer filter is TRUE.|
 |reverse_primers|optional|NULL|BED file of reverse. Only checked if Primer filter is TRUE.|
+|extract_high_quality_SJs|optional|FALSE|Whether to extract reads with high quality splice junctions, and run Bambu on these reads. We recommend using this option to increase accuracy in calling novel isoforms.|
+|JAQ|optional|0.8|The minimum junction alignment quality every junction must meet in order for a read to be included. Only checked if extract_high_quality_SJs is TRUE.|
+|junction_window|optional|25|The nt distance upstream and downstream of splice junctions to calculate the JAQ. Only checked if extract_high_quality_SJs is TRUE.|
 |max_intron_length|optional|400|Controls the '-G' flag in minimap2 as some complex genes have long introns.|
 |bambu_ndr|optional|1|Controls the bambu 'NDR' option. We set this to 1 by default to return all possible novel isoforms and filter them downstream.|
 |bambu_min_gene_fraction|optional|0.001|Controls the bambu 'min.readFractionByGene' option.|
@@ -185,6 +199,7 @@ barcode04,group2
 The main output of IsoLamp includes:
   - a basic text report
   - annotation of known and novel isoforms as a GTF
+  - information on novel isoforms classes from Gffcompare and Bambu
   - quantification of known and novel isoforms (counts and propoprtions) as CSVs
   - a PCA plot of samples/barcodes
   - an accuracy plot of all input reads
@@ -194,7 +209,6 @@ The main output of IsoLamp includes:
 The results from the IsoLamp pipeline can be visualised using IsoVis: https://isomix.org/isovis.
 
 The isoform annotation GTF (and optionally isoform counts CSV) can be directly uploaded to IsoVIs.
-
 
 ## Troubleshooting
 

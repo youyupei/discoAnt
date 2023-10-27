@@ -43,7 +43,12 @@ suppressWarnings({
   
   se <- bambu(reads = test.bam, annotations = bambuAnnotations, genome = fa.file, NDR=ndr_param, opt.discovery=list(min.readFractionByGene=genefraction_param))
   
+  # output bambu isoforms
   writeBambuOutput(se, opt$output_dir)
   
+  # output tx classes
+  tx_data <- as.data.frame(mcols(se))
+  tx_data <- apply(tx_data,2,as.character)
+  write.table(tx_data, paste0(opt$output_dir, "/bambu_tx_classes.txt"), row.names=F, quote=F, sep="\t")
   
 })

@@ -16,8 +16,8 @@ chmod +x SQANTI3/utilities/gtfToGenePred
 # install cDNA Cupcake
 git clone https://github.com/youyupei/cDNA_Cupcake.git
 cd cDNA_Cupcake
-python setup.py build
-python setup.py install
+python cDNA_Cupcake/setup.py build
+python cDNA_Cupcake/setup.py install
 
-conda deactivate 
+conda deactivate
 
