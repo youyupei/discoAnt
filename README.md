@@ -169,7 +169,7 @@ Detailed descriptions of parameters:
 |OUTPUT_NAME|required|NA|A directory will be created with this name, we suggest using the gene name.|
 |ENSG_ID|required|NA|The ENSEMBL gene ID. This is used to filter the reference genome and annotation. An ENSEMBL ID is also required for visualisation with IsoVis. If this ID not available, use the gene name as it appears in the GTF (as in the 'sirv_test_data/sirv_params.ini' file).|
 |READS|required|NA|Path to the top level directory of sample/barcode directories.|
-|GENOME|required|NA|The reference genome.|
+|GENOME|required|NA|The reference genome FASTA.|
 |ANNOTATION|required|NA|The reference annotation GTF.|
 |grouping_data|optional|NULL|A CSV file of sample and group names used for plotting. The first row must be 'sample,group'. See example of this below and in 'sirv_test_data/sirv_grouping.csv'|
 |read_count_minimum|optional|5|Known and novel isoforms must meet this threshold in at least 'samples_minimum' number of samples.|
@@ -177,13 +177,13 @@ Detailed descriptions of parameters:
 |downsampling|optional|TRUE|Whether each sample/barcode should be downsampled to a consistent number of reads.|
 |number_reads_downsample|optional|8000|Number of reads to downsample each sample/barcode.|
 |primer_site_based_filter|optional|FALSE|Whether to remove isoforms that do not overlap the primers used to perform amplicon sequencing. We recommend using this option.|
-|forward_primers|optional|NULL|BED file of forward primers. Only checked if Primer filter is TRUE.|
-|reverse_primers|optional|NULL|BED file of reverse. Only checked if Primer filter is TRUE.|
+|forward_primers|optional|NULL|BED file of forward primers. Only checked if primer_site_based_filter is TRUE.|
+|reverse_primers|optional|NULL|BED file of reverse primers. Only checked if primer_site_based_filter is TRUE.|
 |extract_high_quality_SJs|optional|FALSE|Whether to extract reads with high quality splice junctions, and run Bambu on these reads. We recommend using this option to increase accuracy in calling novel isoforms.|
 |JAQ|optional|0.8|The minimum junction alignment quality every junction must meet in order for a read to be included. Only checked if extract_high_quality_SJs is TRUE.|
 |junction_window|optional|25|The nt distance upstream and downstream of splice junctions to calculate the JAQ. Only checked if extract_high_quality_SJs is TRUE.|
 |max_intron_length|optional|400|Controls the '-G' flag in minimap2 as some complex genes have long introns.|
-|bambu_ndr|optional|1|Controls the bambu 'NDR' option. We set this to 1 by default to return all possible novel isoforms and filter them downstream.|
+|bambu_ndr|optional|1|Controls the bambu 'NDR' option. We set this to 1 by default to return all possible novel isoforms and filter these downstream.|
 |bambu_min_gene_fraction|optional|0.001|Controls the bambu 'min.readFractionByGene' option.|
 
 Example grouping_data file:
