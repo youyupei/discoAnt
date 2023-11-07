@@ -14,10 +14,7 @@ dependencies:
   - gffcompare
   - minimap2
   - python=3.7
-  - pandas
-  - pysam
-  - numpy
-  - tqdm
+  - pip
   - r-base
   - r-biocmanager
   - r-optparse
@@ -30,6 +27,11 @@ dependencies:
   - r-reshape
   - r-purrr
   - r-ggplot2
+  - pip:
+    - pandas
+    - pysam
+    - numpy
+    - tqdm
 # SQANTI
 #  - numpy
 #  - openssl
